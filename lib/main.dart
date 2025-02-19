@@ -1,22 +1,107 @@
 import 'package:flutter/material.dart';
+import 'dart:async'; // Import Timer from dart:async
 
 void main() {
   runApp(
     MaterialApp(
-      home: DigitalPetApp(),
+      home: PetNameInputScreen(),
     ),
   );
 }
 
+// Screen for entering the pet's name
+class PetNameInputScreen extends StatefulWidget {
+  @override
+  _PetNameInputScreenState createState() => _PetNameInputScreenState();
+}
+
+class _PetNameInputScreenState extends State<PetNameInputScreen> {
+  final TextEditingController _nameController = TextEditingController();
+
+  void _navigateToDigitalPetApp(BuildContext context) {
+    if (_nameController.text.trim().isEmpty) {
+      // Show an error if the name is empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a name for your pet!')),
+      );
+    } else {
+      // Navigate to the main app screen with the pet's name
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => DigitalPetApp(petName: _nameController.text.trim()),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Name Your Pet'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _nameController,
+              decoration: InputDecoration(
+                labelText: 'Enter your pet\'s name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => _navigateToDigitalPetApp(context),
+              child: Text('Confirm Name'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Main app screen
 class DigitalPetApp extends StatefulWidget {
+  final String petName;
+
+  DigitalPetApp({required this.petName});
+
   @override
   _DigitalPetAppState createState() => _DigitalPetAppState();
 }
 
 class _DigitalPetAppState extends State<DigitalPetApp> {
-  String petName = "Your Pet";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  Timer? _hungerTimer; // Timer for automatic hunger increase
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the timer when the app starts
+    _startHungerTimer();
+  }
+
+  @override
+  void dispose() {
+    // Cancel the timer when the app is disposed
+    _hungerTimer?.cancel();
+    super.dispose();
+  }
+
+  // Function to start the timer
+  void _startHungerTimer() {
+    _hungerTimer = Timer.periodic(Duration(seconds: 30), (timer) {
+      setState(() {
+        hungerLevel = (hungerLevel + 5).clamp(0, 100); // Increase hunger by 5 every 30 seconds
+        _updateHappiness(); // Update happiness based on hunger level
+      });
+    });
+  }
 
   // Function to determine the pet's color based on happiness level
   Color _getPetColor() {
@@ -26,6 +111,17 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       return Colors.yellow; // Neutral
     } else {
       return Colors.red; // Unhappy
+    }
+  }
+
+  // Function to determine the pet's mood based on happiness level
+  String _getPetMood() {
+    if (happinessLevel > 70) {
+      return 'Happy 😊';
+    } else if (happinessLevel >= 30 && happinessLevel <= 70) {
+      return 'Neutral 😐';
+    } else {
+      return 'Unhappy 😞';
     }
   }
 
@@ -86,12 +182,19 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                   'assets/images/catbird-removebg-preview.png', // Path to your image in the assets folder
                   width: 80, // Adjust the size as needed
                   height: 80,
+                  fit: BoxFit.cover, // Ensure the image fits within the container
                 ),
               ),
             ),
-            SizedBox(height: 32.0),
+            SizedBox(height: 16.0),
+            // Pet mood indicator
             Text(
-              'Name: $petName',
+              'Mood: ${_getPetMood()}', // Display mood text and emoji
+              style: TextStyle(fontSize: 20.0),
+            ),
+            SizedBox(height: 16.0),
+            Text(
+              'Name: ${widget.petName}', // Display the custom pet name
               style: TextStyle(fontSize: 20.0),
             ),
             SizedBox(height: 16.0),
