@@ -82,9 +82,10 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Text(
-                  '🐶', // You can replace this with an image or icon
-                  style: TextStyle(fontSize: 40),
+                child: Image.asset(
+                  'assets/images/catbird-removebg-preview.png', // Path to your image in the assets folder
+                  width: 80, // Adjust the size as needed
+                  height: 80,
                 ),
               ),
             ),
